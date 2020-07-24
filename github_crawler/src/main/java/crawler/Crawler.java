@@ -1,17 +1,19 @@
 package crawler;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import dao.Project;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -21,6 +23,8 @@ import java.util.List;
  * @Author: Ma Yuanyuan
  */
 public class Crawler {
+    private OkHttpClient okHttpClient = new OkHttpClient();
+    private Gson gson = new GsonBuilder().create();
     private HashSet<String> urlBlackList = new HashSet<>();
 
     {
@@ -33,14 +37,26 @@ public class Crawler {
 
     public static void main(String[] args) throws IOException {
         Crawler crawler = new Crawler();
+        //获取入口页面
         String html = crawler.getPage("https://github.com/akullpp/awesome-java/blob/master/README.md");
         //System.out.println(respBody);
+        //解析入口页面，获取项目列表
         List<Project> projects = crawler.parseProjectList(html);
-        System.out.println(projects);
+        //System.out.println(projects);
+        //遍历项目列表，调用github API获取项目信息
+        for(int i = 0; i < projects.size()&& i<5;i++){
+            Project project = projects.get(i);
+            String repoName = crawler.getRepoName(project.getUrl());
+            String jsonString = crawler.getRepoInfo(repoName);
+            //System.out.println(jsonString);
+            //解析每个仓库获取到JSON数据，得到需要的信息
+            crawler.parseRepoInfo(jsonString,project);
+            System.out.println(project);
+        }
     }
     public String getPage(String url) throws IOException {
         //1.创建一个OkHttpClient对象
-        OkHttpClient okHttpClient = new OkHttpClient();
+        okHttpClient = new OkHttpClient();
         //2.创建一个Request对象
         //实例化一个对象有很多方式，可以直接new，也可以使用某个静态的工厂方法来创建实例
         //Builder中提供的url方法可以设定当前请求的url
@@ -60,6 +76,7 @@ public class Crawler {
     public List<Project> parseProjectList(String html){
         ArrayList<Project> result = new ArrayList<>();
         //1.创建Document对象
+        //把字符串形式的html转换成一个树形结构document
         Document document = Jsoup.parse(html);
         Elements elements = document.getElementsByTag("li");
         for(Element li:elements){
@@ -91,5 +108,57 @@ public class Crawler {
             result.add(project);
         }
         return result;
+    }
+
+    //调用Github API获取指定仓库的信息
+    //repoName形如 用户名/具体仓库名
+    public String getRepoInfo(String repoName) throws IOException {
+        String userName = "WWaken";
+        String password = "m1549200803";
+        // 进行身份认证, 把用户名密码加密之后, 得到一个字符串, 把这个字符串放到 HTTP header 中.
+        // 此处只是针对用户名密码进行了 base64 加密. 严格意义上说, 没啥卵用, 可以很容易解密.
+        // 总是好过直接传输明文
+        // credential 形如: Basic SEd0ejIyMjI6dHoyMjIyMjIyMjI=
+        String credential = Credentials.basic(userName, password);
+
+        String url = "https://api.github.com/repos/" + repoName;
+        // OkHttpClient 对象前面已经创建过了, 不需要重复创建.
+        // 请求对象, Call 对象, 响应对象, 还是需要重新创建的
+        Request request = new Request.Builder().url(url).header("Authorization", credential).build();
+        Call call = okHttpClient.newCall(request);
+        Response response = call.execute();
+        if (!response.isSuccessful()) {
+            System.out.println("访问 Github API 失败! url = " + url);
+            return null;
+        }
+        return response.body().string();
+    }
+
+    // 这个方法的功能, 就是把项目的 url 提取出其中的仓库名字和作者名字
+    // https://github.com/doov-io/doov => doov-io/doov
+    public String getRepoName(String url) {
+        int lastOne = url.lastIndexOf("/");
+        int lastTwo = url.lastIndexOf("/", lastOne - 1);
+        if (lastOne == -1 || lastTwo == -1) {
+            System.out.println("当前 URL 不是一个标准的项目 url! url:" + url);
+            return null;
+        }
+        return url.substring(lastTwo + 1);
+    }
+
+    //通过这个方法来获取到仓库的相关信息
+    //第一个参数表示Github API获取到的结果
+    //第二个参数表示解析出来的相关信息的数，保存到project对象中
+    //使用Gson这个库来进行解析
+    public void parseRepoInfo(String jsonString, Project project) {
+        Type type = new TypeToken<HashMap<String, Object>>(){}.getType();
+        HashMap<String, Object> hashMap = gson.fromJson(jsonString, type);
+        // hashMap 中的 key 的名字都是源于 Github API 的返回值.
+        Double starCount = (Double)hashMap.get("stargazers_count");
+        project.setStarCount(starCount.intValue());
+        Double forkCount = (Double)hashMap.get("forks_count");
+        project.setForkCount(forkCount.intValue());
+        Double openedIssueCount = (Double)hashMap.get("open_issues_count");
+        project.setOpenIssueCount(openedIssueCount.intValue());
     }
 }
