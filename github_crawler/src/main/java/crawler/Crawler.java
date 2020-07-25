@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import dao.Project;
+import dao.ProjectDao;
 import okhttp3.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -37,23 +38,45 @@ public class Crawler {
 
     public static void main(String[] args) throws IOException {
         Crawler crawler = new Crawler();
+        long startTime = System.currentTimeMillis();
         //获取入口页面
         String html = crawler.getPage("https://github.com/akullpp/awesome-java/blob/master/README.md");
         //System.out.println(respBody);
+        long finishTime = System.currentTimeMillis();
+        System.out.println("获取入口页面时间为："+ (finishTime-startTime)+"ms");
         //解析入口页面，获取项目列表
         List<Project> projects = crawler.parseProjectList(html);
         //System.out.println(projects);
+        System.out.println("解析项目列表时间：" +(System.currentTimeMillis() - finishTime)+"ms");
+        finishTime = System.currentTimeMillis();
+
         //遍历项目列表，调用github API获取项目信息
-        for(int i = 0; i < projects.size()&& i<5;i++){
-            Project project = projects.get(i);
-            String repoName = crawler.getRepoName(project.getUrl());
-            String jsonString = crawler.getRepoInfo(repoName);
-            //System.out.println(jsonString);
-            //解析每个仓库获取到JSON数据，得到需要的信息
-            crawler.parseRepoInfo(jsonString,project);
-            System.out.println(project);
+        for(int i = 0; i < projects.size();i++){
+            try {
+                Project project = projects.get(i);
+                String repoName = crawler.getRepoName(project.getUrl());
+                String jsonString = crawler.getRepoInfo(repoName);
+                System.out.println(jsonString);
+                //解析每个仓库获取到JSON数据，得到需要的信息
+                crawler.parseRepoInfo(jsonString,project);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        System.out.println("解析所有项目的时间：" + (System.currentTimeMillis() -finishTime)+"ms");
+        finishTime = System.currentTimeMillis();
+
+       // 把project保存到数据库中
+        ProjectDao projectDao = new ProjectDao();
+        for (int i = 0; i < projects.size(); i++) {
+            Project project = projects.get(i);
+            projectDao.save(project);
+        }
+        System.out.println("存储数据库的时间：" + (System.currentTimeMillis() -finishTime)+"ms");
+        finishTime = System.currentTimeMillis();
+        System.out.println("整个项目总时间为" + (finishTime - startTime) + "ms");
     }
+
     public String getPage(String url) throws IOException {
         //1.创建一个OkHttpClient对象
         okHttpClient = new OkHttpClient();
@@ -159,6 +182,6 @@ public class Crawler {
         Double forkCount = (Double)hashMap.get("forks_count");
         project.setForkCount(forkCount.intValue());
         Double openedIssueCount = (Double)hashMap.get("open_issues_count");
-        project.setOpenIssueCount(openedIssueCount.intValue());
+        project.setOpenedIssueCount(openedIssueCount.intValue());
     }
 }
