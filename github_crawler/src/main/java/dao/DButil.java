@@ -18,7 +18,7 @@ import java.sql.SQLException;
 // 这是一个单例类, 帮我们管理数据库的连接
 public class DButil {
 
-    private static String URL = "jdbc:mysql://127.0.0.1:3306/java_github_crawler2?characterEncoding=utf8&useSSL=true" ;
+    private static String URL = "jdbc:mysql://127.0.0.1:3306/github_crawler?characterEncoding=utf8&useSSL=true" ;
     private static String USERNAME = "root";
     private static String PASSWORD = "";
 
