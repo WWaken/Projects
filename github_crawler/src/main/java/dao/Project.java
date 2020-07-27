@@ -17,7 +17,7 @@ public class Project {
     //需要根据该项目的url进入到对应页面，从页面获取以下属性
     private int starCount;
     private int forkCount;
-    private int openIssueCount;
+    private int openedIssueCount;
 
     public String getName() {
         return name;
@@ -59,12 +59,12 @@ public class Project {
         this.forkCount = forkCount;
     }
 
-    public int getOpenIssueCount() {
-        return openIssueCount;
+    public int getOpenedIssueCount() {
+        return openedIssueCount;
     }
 
-    public void setOpenIssueCount(int openIssueCount) {
-        this.openIssueCount = openIssueCount;
+    public void setOpenedIssueCount(int openIssueCount) {
+        this.openedIssueCount = openedIssueCount;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class Project {
                 ", decription='" + decription + '\'' +
                 ", starCount=" + starCount +
                 ", forkCount=" + forkCount +
-                ", openIssueCount=" + openIssueCount +
+                ", openedIssueCount=" + openedIssueCount +
                 '}';
     }
 }

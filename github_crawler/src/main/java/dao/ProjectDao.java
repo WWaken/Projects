@@ -2,8 +2,11 @@ package dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @ClassName: ProjectDao
@@ -41,5 +44,34 @@ public class ProjectDao {
         }finally{
             DButil.close(connection,statement, null);
         }
+    }
+    public List<Project> selectProByDate(String date){
+        List<Project> projects = new ArrayList<>();
+        //获取到数据库连接
+        Connection connection = DButil.getConnection();
+        //拼装sql语句
+        String sql = "select name,url,starCount,forkCount,openedIssueCount " +
+                "from project_table where date = ? order by starCount desc";
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1,date);
+            resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                Project project = new Project();
+                project.setName(resultSet.getString("name"));
+                project.setUrl(resultSet.getString("url"));
+                project.setStarCount(resultSet.getInt("starCount"));
+                project.setForkCount(resultSet.getInt("forkCount"));
+                project.setOpenedIssueCount(resultSet.getInt("openedIssueCount"));
+                projects.add(project);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            DButil.close(connection,preparedStatement,resultSet);
+        }
+        return projects;
     }
 }
