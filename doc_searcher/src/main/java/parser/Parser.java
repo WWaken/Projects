@@ -1,11 +1,14 @@
 package parser;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
  * @ClassName: Parser
- * @Description: j读取文档内容，解析成行文本文件
+ * @Description: 读取文档内容，解析成行文本文件
  * @Author: Ma Yuanyuan
  */
 
@@ -27,6 +30,8 @@ public class Parser {
             //最终输出文件是一个行文本文件，每一行对应一个html文件
             //line这个对象对应到一个文件
             String line = convertLine(f);
+            System.out.println(line);
+            System.out.println("===========");
         }
         //3.把DocInfo对象写入到最终的输出文件中，写成行文本文件的形式。
     }
@@ -38,10 +43,10 @@ public class Parser {
         //根据f转换出url
         String url = convertUrl(f);
         //根据f转换出content,去掉html标签，去掉换行符
-        String content = convertContent(f);
+     //   String content = convertContent(f);
         //将三个部分拼接接出一行文本
         //"\3"起到分割三个部分的效果，在html这样的文本文件不能出现 \3 这种不可见字符（\2 \1）
-        return title + "\3" + url + "\3" + content + "\n";
+       return title + "\3" + url + "\3" + content + "\n";
     }
 
 
@@ -53,10 +58,36 @@ public class Parser {
 
     private static String convertUrl(File f) {
         //此处的url是线上文档对应url
-        
+        //线上文档和线下目录相结合
+        //线上：https://docs.oracle.com/javase/8/docs/api/java\io\CharArrayReader.html
+        //文档：F:\docs\api\java\io\CharArrayReader.html
+        //结合：https://docs.oracle.com/javase/8/docs/api + \java\io\CharArrayReader.html
+        String part1 = "https://docs.oracle.com/javase/8/docs/api";
+        String part2 = f.getAbsolutePath().substring(INPUT_PATH.length());
+        return part1 + part2;
     }
 
-    private static String convertContent(File f) {
+    private static String convertContent(File f) throws IOException {
+        //去掉标签、去掉\n
+        //先读取文件
+        FileReader fileReader = new FileReader(f);
+        boolean isContent = true;
+        StringBuilder outpupt = new StringBuilder();
+        while(true){
+            int ret = fileReader.read();
+            if(ret == -1) {
+                //读取完毕
+                break;
+            }
+            char c = (char) ret;
+            if(isContent){
+                //当前这部分是正文
+                if (c == '<') {
+                    isContent = false;
+                    continue;
+                }else
+            }
+        }
     }
 
     //当这个方法递归完成后，就在List中获取到了inputpath中以.html结尾的文件
