@@ -1,8 +1,8 @@
 package parser;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -17,7 +17,8 @@ public class Parser {
     private static final String INPUT_PATH = "F:\\docs\\api";
     private static final String OUTPUT_PATH = "F:\\raw_data.txt";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        FileWriter resultFileWriter = new FileWriter(new File(OUTPUT_PATH));
         //通过main完成预处理过程
         //1.枚举出输入路径下的所有html文件（递归）。
         ArrayList<File> fileList = new ArrayList<>();
@@ -30,20 +31,20 @@ public class Parser {
             //最终输出文件是一个行文本文件，每一行对应一个html文件
             //line这个对象对应到一个文件
             String line = convertLine(f);
-            System.out.println(line);
-            System.out.println("===========");
+            //3.把DocInfo对象写入到最终的输出文件中，写成行文本文件的形式。
+            resultFileWriter.write(line);
         }
-        //3.把DocInfo对象写入到最终的输出文件中，写成行文本文件的形式。
+        resultFileWriter.close();
     }
 
     //除文本文档外，还可以使用json，xml等
-    private static String convertLine(File f) {
+    private static String convertLine(File f) throws IOException {
         //根据f转换出标题
         String title = convertTitle(f);
         //根据f转换出url
         String url = convertUrl(f);
         //根据f转换出content,去掉html标签，去掉换行符
-     //   String content = convertContent(f);
+       String content = convertContent(f);
         //将三个部分拼接接出一行文本
         //"\3"起到分割三个部分的效果，在html这样的文本文件不能出现 \3 这种不可见字符（\2 \1）
        return title + "\3" + url + "\3" + content + "\n";
@@ -72,7 +73,7 @@ public class Parser {
         //先读取文件
         FileReader fileReader = new FileReader(f);
         boolean isContent = true;
-        StringBuilder outpupt = new StringBuilder();
+        StringBuilder output = new StringBuilder();
         while(true){
             int ret = fileReader.read();
             if(ret == -1) {
@@ -85,9 +86,19 @@ public class Parser {
                 if (c == '<') {
                     isContent = false;
                     continue;
-                }else
+                }
+                if(c == '\n' || c == '\r'){
+                    c = ' ';
+                }
+                output.append(c);
+            }else{
+                if(c == '>'){
+                    isContent = true;
+                }
             }
         }
+        fileReader.close();
+        return output.toString();
     }
 
     //当这个方法递归完成后，就在List中获取到了inputpath中以.html结尾的文件
