@@ -39,24 +39,44 @@ public class Index {
     }
     //构建索引，把raw_data.txt文件内容读取出来，加载到内存上的数据结构中
     public void build(String inputPath) throws IOException {
+        class Timer{
+            public long readFileTime;
+            public long buildForwardTime;
+            public long buildInvertedTime;
+        }
+        Timer timer = new Timer();
         long start = System.currentTimeMillis();
         System.out.println("build start");
         //1.打开文件，按行读取文件内容
         BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(inputPath)));
         //2.读取到每一行
-        String line = "";
-        while((line = bufferedReader.readLine()) != null){
-            //3.按照'\3'来切分，结果可以用来构成一个DocInfo对象，并加入正派索引
+        while(true){
+            long t1 = System.currentTimeMillis();
+            String line = bufferedReader.readLine();
+            if(line == null){
+                break;
+            }
+            long t2 = System.currentTimeMillis();
+            //3.按照'\3'来切分，结果可以用来构成一个DocInfo对象，并加入正排索引
             DocInfo docInfo = buildForward(line);
+            long t3 = System.currentTimeMillis();
             //4.构造倒排，把DocInfo对象中的内容，进一步处理，构造出倒排索引
             buildInverted(docInfo);
-            System.out.println("Build" + docInfo.getTitle() + "done!");
+            long t4 = System.currentTimeMillis();
+            System.out.println("Build  " + docInfo.getTitle() + "  done!");
+
+            timer.readFileTime += t2 -t1;
+            timer.buildForwardTime += t3 - t2;
+            timer.buildInvertedTime += t4 - t3;
         }
         bufferedReader.close();
 
         long finish = System.currentTimeMillis();
         System.out.println("build finish");
         System.out.println("花了" + (finish - start) + "ms");
+        System.out.println("readFileTime:" + timer.readFileTime );
+        System.out.println("buildForwardTime" + timer.buildForwardTime);
+        System.out.println("buildInvertedTime" + timer.buildInvertedTime);
     }
 
     private void buildInverted(DocInfo docInfo) {

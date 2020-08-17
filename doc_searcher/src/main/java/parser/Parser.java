@@ -22,7 +22,7 @@ public class Parser {
         //通过main完成预处理过程
         //1.枚举出输入路径下的所有html文件（递归）。
         ArrayList<File> fileList = new ArrayList<>();
-        enumFile(INPUT_PATH,fileList);
+        enumFile(INPUT_PATH, fileList);
         //System.out.println(fileList.size());
         //2.针对枚举出来的html文件路径进行遍历，依次打开每个文件，并读取内容。
         //把内容转换成需要的结构化的数据（DocInfo对象)

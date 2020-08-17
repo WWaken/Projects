@@ -8,7 +8,7 @@ package common;
 public class DocInfo {
     //文档唯一的身份标识
     private int docId;
-    //该文档的标题，用文件名来表示
+    //该文档的标题，用文件名来表示,去掉html
     private String title;
     //该文档对应的线上文档的url，根据本地文档去拼接
     private String url;
