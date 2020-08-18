@@ -43,6 +43,7 @@ public class Index {
             public long readFileTime;
             public long buildForwardTime;
             public long buildInvertedTime;
+            public long printTime;
         }
         Timer timer = new Timer();
         long start = System.currentTimeMillis();
@@ -65,9 +66,12 @@ public class Index {
             long t4 = System.currentTimeMillis();
             System.out.println("Build  " + docInfo.getTitle() + "  done!");
 
+            long t5 = System.currentTimeMillis();
+
             timer.readFileTime += t2 -t1;
             timer.buildForwardTime += t3 - t2;
             timer.buildInvertedTime += t4 - t3;
+            timer.printTime += t5-t4;
         }
         bufferedReader.close();
 
@@ -77,6 +81,7 @@ public class Index {
         System.out.println("readFileTime:" + timer.readFileTime );
         System.out.println("buildForwardTime" + timer.buildForwardTime);
         System.out.println("buildInvertedTime" + timer.buildInvertedTime);
+        System.out.println("printTime" + timer.printTime);
     }
 
     private void buildInverted(DocInfo docInfo) {
