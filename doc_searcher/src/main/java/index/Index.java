@@ -64,14 +64,14 @@ public class Index {
             //4.构造倒排，把DocInfo对象中的内容，进一步处理，构造出倒排索引
             buildInverted(docInfo);
             long t4 = System.currentTimeMillis();
-            System.out.println("Build  " + docInfo.getTitle() + "  done!");
-
-            long t5 = System.currentTimeMillis();
+//            System.out.println("Build  " + docInfo.getTitle() + "  done!");
+//
+//            long t5 = System.currentTimeMillis();
 
             timer.readFileTime += t2 -t1;
             timer.buildForwardTime += t3 - t2;
             timer.buildInvertedTime += t4 - t3;
-            timer.printTime += t5-t4;
+            //timer.printTime += t5-t4;
         }
         bufferedReader.close();
 
@@ -81,7 +81,7 @@ public class Index {
         System.out.println("readFileTime:" + timer.readFileTime );
         System.out.println("buildForwardTime" + timer.buildForwardTime);
         System.out.println("buildInvertedTime" + timer.buildInvertedTime);
-        System.out.println("printTime" + timer.printTime);
+        //System.out.println("printTime" + timer.printTime);
     }
 
     private void buildInverted(DocInfo docInfo) {
